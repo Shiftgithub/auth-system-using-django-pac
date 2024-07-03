@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Activation Sent</title>
-</head>
-<body>
-    <p>An activation link has been sent to your email address. Please check your email to activate your account.</p>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}
+  Activation Sent
+{% endblock %}
+{% block content %}
+  <p>An activation link or OTP has been sent to your email address. Please check your email to activate your account.</p>
+{% endblock %}

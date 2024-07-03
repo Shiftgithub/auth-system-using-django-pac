@@ -6,8 +6,11 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import login
+from django.utils import timezone
+from datetime import timedelta
 from .forms import RegistrationForm
 from .tokens import account_activation_token
+from .models import OTP
 
 User = get_user_model()
 
@@ -18,6 +21,7 @@ def registration(request):
 
         if form.is_valid():
             email = form.cleaned_data.get("email")
+            activation_method = request.POST.get("activation_method")
 
             if User.objects.filter(email=email).exists():
                 form.add_error("email", "Email already exists. Try another one.")
@@ -26,29 +30,43 @@ def registration(request):
                 user.is_active = False
                 user.save()
 
-                # Send activation email
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-                token = account_activation_token.make_token(user)
-                activation_link = (
-                    f"{request.scheme}://{request.get_host()}/activate/{uid}/{token}/"
-                )
-
-                mail_subject = "Activate your account"
-                message = render_to_string(
-                    "registration/activation_email.html",
-                    {
-                        "user": user,
-                        "activation_link": activation_link,
-                    },
-                )
-
-                send_mail(mail_subject, message, settings.EMAIL_HOST_USER, [user.email])
-
-                return redirect("activation_sent")
+                if activation_method == "link":
+                    send_activation_email(request, user)
+                    return redirect("activation_sent")
+                else:
+                    send_otp_email(user)
+                    return render(request, "registration/otp_verification.html")
     else:
         form = RegistrationForm()
 
     return render(request, "registration/registration.html", {"form": form})
+
+
+def send_activation_email(request, user):
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = account_activation_token.make_token(user)
+    activation_link = f"{request.scheme}://{request.get_host()}/activate/{uid}/{token}/"
+
+    mail_subject = "Activate your account"
+    message = render_to_string(
+        "registration/activation_email.html",
+        {
+            "user": user,
+            "activation_link": activation_link,
+        },
+    )
+
+    send_mail(mail_subject, message, settings.EMAIL_HOST_USER, [user.email])
+
+
+def send_otp_email(user):
+    otp_instance, created = OTP.objects.get_or_create(user=user)
+    otp_instance.generate_otp()
+
+    mail_subject = "Your OTP code"
+    message = f"Your OTP code is {otp_instance.otp}. It is valid for 15 minutes."
+
+    send_mail(mail_subject, message, settings.EMAIL_HOST_USER, [user.email])
 
 
 def activate(request, uidb64, token):
@@ -65,6 +83,29 @@ def activate(request, uidb64, token):
         return redirect("dashboard")
     else:
         return render(request, "registration/activation_invalid.html")
+
+
+def verify_otp(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        otp = request.POST.get("otp")
+
+        try:
+            user = User.objects.get(email=email)
+            otp_instance = OTP.objects.get(user=user)
+
+            if otp_instance.is_valid() and otp_instance.otp == otp:
+                user.is_active = True
+                user.save()
+                otp_instance.delete()  # delete OTP after successful verification
+                login(request, user)
+                return redirect("dashboard")
+            else:
+                return render(request, "registration/otp_invalid.html")
+        except (User.DoesNotExist, OTP.DoesNotExist):
+            return render(request, "registration/otp_invalid.html")
+
+    return render(request, "registration/otp_verification.html")
 
 
 def dashboard(request):

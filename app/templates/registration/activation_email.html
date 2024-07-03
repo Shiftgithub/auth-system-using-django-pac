@@ -1,11 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Activate your account</title>
-</head>
-<body>
-    <p>Hi {{ user.username }},</p>
-    <p>Please click on the link below to activate your account:</p>
-    <p><a href="{{ activation_link }}">{{ activation_link }}</a></p>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}
+  Activate your account
+{% endblock %}
+{% block content %}
+  <p>Hi {{ user.username }},</p>
+  <p>Please click on the link below to activate your account:</p>
+  <p>
+    <a href="{{ activation_link }}">{{ activation_link }}</a>
+  </p>
+{% endblock %}

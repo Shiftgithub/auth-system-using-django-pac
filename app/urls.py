@@ -6,6 +6,7 @@ urlpatterns = [
     path("auth/", include("django.contrib.auth.urls")),
     path("", dashboard, name="dashboard"),
     path("auth/registration/", registration, name="registration"),
+    path("auth/verify-otp/", verify_otp, name="verify_otp"),
     path("activate/<uidb64>/<token>/", activate, name="activate"),
     path(
         "activation_sent/",

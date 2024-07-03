@@ -6,8 +6,13 @@
   <form method="POST" action="{% url 'registration' %}">
     {% csrf_token %}
     {{ form.as_p }}
+    <label for="activation_method">Choose activation method:</label>
+    <select name="activation_method">
+      <option value="link">Activation Link</option>
+      <option value="otp">OTP</option>
+    </select>
     <button type="submit">Registration</button>
-    <br>
+    <br />
     <p>
       If you already have account <a href="{% url 'login' %}">Login</a>
     </p>
