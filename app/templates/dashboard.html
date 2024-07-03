@@ -3,7 +3,7 @@
   {% if user.is_authenticated %}
     <form action="{% url 'logout' %}" method="POST">
       {% csrf_token %}
-      <p>Welcome, {{ user.username }}. Thanks for logging in.</p>
+      <p>Welcome, {{ user.first_name }} {{ user.last_name }}. Thanks for logging in.</p>
       <button type="submit">Logout</button>
     </form>
   {% else %}
