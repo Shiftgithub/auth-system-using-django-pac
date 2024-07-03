@@ -69,6 +69,23 @@ def send_otp_email(user):
     send_mail(mail_subject, message, settings.EMAIL_HOST_USER, [user.email])
 
 
+def resend_otp(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+            if not user.is_active:
+                send_otp_email(user)
+                return redirect("verify_otp")
+            else:
+                return redirect("dashboard")
+        except User.DoesNotExist:
+            return render(request, "registration/otp_invalid.html")
+
+    return render(request, "registration/resend_otp.html")
+
+
 def activate(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
@@ -96,7 +113,7 @@ def verify_otp(request):
 
             if otp_instance.is_valid() and otp_instance.otp == otp:
                 user.is_active = True
-                user.save()
+                user.save(otp=0)
                 otp_instance.delete()  # delete OTP after successful verification
                 login(request, user)
                 return redirect("dashboard")
@@ -104,6 +121,8 @@ def verify_otp(request):
                 return render(request, "registration/otp_invalid.html")
         except (User.DoesNotExist, OTP.DoesNotExist):
             return render(request, "registration/otp_invalid.html")
+    else:
+        pass
 
     return render(request, "registration/otp_verification.html")
 

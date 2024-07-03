@@ -11,4 +11,10 @@
     <input type="text" name="otp" required />
     <button type="submit">Verify OTP</button>
   </form>
+  <br />
+  <form method="post" action="{% url 'resend_otp' %}">
+    {% csrf_token %}
+    <input type="hidden" name="email" value="{{ email }}" />
+    <button type="submit">Resend OTP</button>
+  </form>
 {% endblock %}

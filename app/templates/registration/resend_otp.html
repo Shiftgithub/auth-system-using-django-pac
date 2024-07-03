@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resend OTP</title>
+</head>
+<body>
+    <form method="post" action="{% url 'resend_otp' %}">
+        {% csrf_token %}
+        <label for="email">Email:</label>
+        <input type="email" name="email" required>
+        <button type="submit">Resend OTP</button>
+    </form>
+</body>
+</html>
