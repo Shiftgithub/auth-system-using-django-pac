@@ -10,7 +10,7 @@ urlpatterns = [
     path("auth/resend-otp/", resend_otp, name="resend_otp"),
     path("activate/<uidb64>/<token>/", activate, name="activate"),
     path(
-        "activation_sent/",
+        "activation-sent/",
         TemplateView.as_view(template_name="registration/activation_sent.html"),
         name="activation_sent",
     ),
